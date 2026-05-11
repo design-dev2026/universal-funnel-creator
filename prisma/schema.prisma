@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER  @map("user")
+  ADMIN @map("admin")
+  OWNER @map("owner")
+
+  @@map("user_role")
+}
+
+enum ProjectStatus {
+  DRAFT    @map("draft")
+  ACTIVE   @map("active")
+  PAUSED   @map("paused")
+  ARCHIVED @map("archived")
+
+  @@map("project_status")
+}
+
+enum IntegrationStatus {
+  ACTIVE       @map("active")
+  DISCONNECTED @map("disconnected")
+  ERROR        @map("error")
+
+  @@map("integration_status")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  projects            Project[]
+  channelIntegrations ChannelIntegration[]
+
+  @@index([role], map: "users_role_idx")
+  @@index([createdAt], map: "users_created_at_idx")
+  @@map("users")
+}
+
+model Project {
+  id              String        @id @default(cuid())
+  name            String
+  userId          String        @map("user_id")
+  productDetails  Json?         @map("product_details")
+  audienceProfile Json?         @map("audience_profile")
+  goal            String?
+  budget          Float?
+  status          ProjectStatus @default(DRAFT)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user            User              @relation(fields: [userId], references: [id])
+  blueprints      FunnelBlueprint[]
+  analyticsEvents AnalyticsEvent[]
+
+  @@index([userId], map: "projects_user_id_idx")
+  @@index([userId, status], map: "projects_user_id_status_idx")
+  @@index([userId, createdAt], map: "projects_user_id_created_at_idx")
+  @@index([status, createdAt], map: "projects_status_created_at_idx")
+  @@map("projects")
+}
+
+model FunnelBlueprint {
+  id                  String   @id @default(cuid())
+  projectId           String   @map("project_id")
+  blueprintJson       Json     @map("blueprint_json")
+  performanceSnapshot Json?    @map("performance_snapshot")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@index([projectId, createdAt], map: "funnel_blueprints_project_id_created_at_idx")
+  @@map("funnel_blueprints")
+}
+
+model RuleSet {
+  id         String @id @default(cuid())
+  name       String
+  conditions Json
+  actions    Json
+  priority   Int    @default(0)
+
+  @@index([priority], map: "rule_sets_priority_idx")
+  @@map("rule_sets")
+}
+
+model CopyTemplate {
+  id             String   @id @default(cuid())
+  type           String
+  productType    String   @map("product_type")
+  awarenessStage String   @map("awareness_stage")
+  content        String
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([type, productType, awarenessStage], map: "copy_templates_lookup_idx")
+  @@index([createdAt], map: "copy_templates_created_at_idx")
+  @@map("copy_templates")
+}
+
+model ChannelIntegration {
+  id                   String            @id @default(cuid())
+  userId               String            @map("user_id")
+  provider             String
+  encryptedCredentials String            @map("encrypted_credentials")
+  status               IntegrationStatus @default(ACTIVE)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "channel_integrations_user_id_idx")
+  @@index([userId, provider], map: "channel_integrations_user_id_provider_idx")
+  @@index([userId, status], map: "channel_integrations_user_id_status_idx")
+  @@map("channel_integrations")
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  projectId  String   @map("project_id")
+  stepNodeId String   @map("step_node_id")
+  event      String
+  metadata   Json?
+  timestamp  DateTime @default(now()) @db.Timestamptz(6)
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@index([projectId, timestamp], map: "analytics_events_project_id_timestamp_idx")
+  @@index([projectId, event, timestamp], map: "analytics_events_project_id_event_timestamp_idx")
+  @@index([projectId, stepNodeId, timestamp], map: "analytics_events_project_id_step_node_id_timestamp_idx")
+  @@index([timestamp], map: "analytics_events_timestamp_idx")
+  @@map("analytics_events")
+}
+
+model BetaSignup {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([createdAt], map: "beta_signups_created_at_idx")
+  @@map("beta_signups")
+}

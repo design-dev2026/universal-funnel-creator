@@ -1,0 +1,58 @@
+{
+  "blueprintId": "bp_1778522130848",
+  "stages": [
+    {
+      "id": "stage_1",
+      "name": "Awareness",
+      "type": "ad",
+      "channel": "facebook",
+      "copyTemplate": {
+        "headline": "Are you struggling with X?",
+        "body": "We have the perfect solution...",
+        "callToAction": "Learn More"
+      }
+    },
+    {
+      "id": "stage_2",
+      "name": "Consideration",
+      "type": "landing_page",
+      "channel": "web",
+      "copyTemplate": {
+        "headline": "The Ultimate Guide to Y",
+        "body": "Sign up to get your free guide...",
+        "callToAction": "Download Now"
+      }
+    },
+    {
+      "id": "stage_3",
+      "name": "Conversion",
+      "type": "checkout",
+      "channel": "web",
+      "copyTemplate": {
+        "headline": "Get Started Today",
+        "body": "Join thousands of happy customers...",
+        "callToAction": "Buy Now"
+      }
+    }
+  ],
+  "metadata": {
+    "generatedAt": "2026-05-11T17:55:30.848Z",
+    "inputUsed": {
+      "productDetails": {
+        "productType": "subscription",
+        "productName": "Universal Funnel Creator",
+        "priceRange": "$49/month",
+        "frequency": "recurring"
+      },
+      "audienceProfile": {
+        "personaName": "Small Business Owner, E-commerce Manager, and Creative Professional",
+        "demographics": "Founders, Marketers, Solo-preneurs",
+        "painPoints": "struggling to build funnels, waste money on ads",
+        "awarenessLevel": "problem-aware"
+      },
+      "budget": 0,
+      "goal": "leads",
+      "assets": []
+    }
+  }
+}
