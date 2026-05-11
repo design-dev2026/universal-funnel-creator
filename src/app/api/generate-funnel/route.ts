@@ -1,4 +1,4 @@
-export const config = { runtime: 'nodejs' };
+export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { generateFunnel } from '@/lib/engine/ruleEngine';
