@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const config = { runtime: 'nodejs' };
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
