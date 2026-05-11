@@ -1,8 +1,7 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
-
-let prisma: PrismaClient;
+import { prisma } from '@/lib/prisma';
 
 const schema = z.object({
   email: z.string().email(),
@@ -10,8 +9,6 @@ const schema = z.object({
 
 export async function POST(request: Request) {
   try {
-    if (!prisma) prisma = new PrismaClient();
-    
     const body = await request.json();
     const parsed = schema.safeParse(body);
     
