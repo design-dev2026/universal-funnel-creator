@@ -1,48 +1,40 @@
 import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 /**
- * Prisma Client Singleton
+ * Prisma Client Singleton for Prisma 7.8.0+
  * 
- * We use a Proxy to ensure that the PrismaClient is only instantiated at runtime.
- * This prevents build-time crashes when DATABASE_URL might be missing.
+ * In Prisma 7, direct connections without Accelerate require an explicit 
+ * driver adapter. We use @prisma/adapter-pg to connect to PostgreSQL.
  */
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma = new Proxy({} as PrismaClient, {
-  get: (target, prop) => {
-    if (prop === 'then') return undefined;
+const createPrismaClient = () => {
+  const url = process.env.DATABASE_URL;
 
-    if (!globalForPrisma.prisma) {
-      const url = process.env.DATABASE_URL;
-      
-      // Build-phase guard
-      if (!url && process.env.NEXT_PHASE === 'phase-production-build') {
-        return (target as any)[prop];
-      }
-
-      try {
-        globalForPrisma.prisma = new PrismaClient({
-          // Explicitly pass the URL to ensure it takes precedence and handles
-          // various production environments correctly.
-          datasources: {
-            db: {
-              url: url
-            }
-          },
-          log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-        });
-      } catch (e) {
-        console.error('CRITICAL: Failed to initialize PrismaClient', e);
-        throw e;
-      }
-    }
-
-    const value = (globalForPrisma.prisma as any)[prop];
-    return typeof value === 'function' ? value.bind(globalForPrisma.prisma) : value;
+  // Build-phase guard: Return a mock if the URL is missing during static generation
+  if (!url && process.env.NEXT_PHASE === 'phase-production-build') {
+    return {} as PrismaClient;
   }
-});
+
+  if (!url) {
+    console.warn('DATABASE_URL is missing. Prisma Client may fail to connect.');
+  }
+
+  // Set up the PostgreSQL driver adapter
+  const pool = new Pool({ connectionString: url });
+  const adapter = new PrismaPg(pool);
+
+  return new PrismaClient({
+    adapter,
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  });
+};
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
